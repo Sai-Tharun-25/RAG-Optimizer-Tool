@@ -2,6 +2,7 @@
 import json
 import time
 import sys
+import requests
 from pathlib import Path
 from datetime import datetime
 
@@ -161,6 +162,27 @@ dataset_path = st.sidebar.text_input("Eval dataset (QA) JSONL", "data/wiki_eval.
 docs_path = st.sidebar.text_input("Corpus (docs) JSONL", "data/wiki_docs.jsonl")
 
 st.sidebar.divider()
+st.sidebar.subheader("Serving corpus control")
+
+if st.sidebar.button("Reload corpus in API", type="primary"):
+    try:
+        res = requests.post(
+            f"{api_url}/reload_corpus",
+            json={"docs_path": docs_path},
+            timeout=600
+        )
+        st.sidebar.write(res.json())
+    except Exception as e:
+        st.sidebar.error(f"Reload failed: {e}")
+
+if st.sidebar.button("API health check"):
+    try:
+        res = requests.get(f"{api_url}/health", timeout=30)
+        st.sidebar.write(res.json())
+    except Exception as e:
+        st.sidebar.error(f"Health check failed: {e}")
+
+st.sidebar.divider()
 st.sidebar.subheader("Optimization settings")
 
 chunk_sizes = st.sidebar.multiselect("Chunk sizes", [128, 256, 512, 768], default=[256, 512])
@@ -194,7 +216,7 @@ with tab_live:
     colA, colB = st.columns([2, 1], gap="large")
     with colA:
         st.subheader("Ask the knowledge base")
-        q = st.text_input("Question", "What is photosynthesis?")
+        q = st.text_input("Question", "Do women live longer than men?")
         k_live = st.slider("k (contexts used)", 1, 8, 3)
         if st.button("Ask", type="primary"):
             import requests
@@ -230,7 +252,7 @@ with tab_live:
     with colB:
         st.subheader("Health check")
         st.write("Make sure your FastAPI service is running.")
-        st.code("uvicorn api.rag_service:app --reload --port 9000")
+        st.code("uvicorn api.main:app --reload --port 9000")
         st.write("Swagger:")
         st.code(f"{api_url}/docs")
 
