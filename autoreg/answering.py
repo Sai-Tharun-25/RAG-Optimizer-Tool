@@ -1,8 +1,8 @@
 # autoreg/answering.py
 from typing import List
 from dataclasses import dataclass
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
-import os
+import torch
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 @dataclass
 class RAGSampleInput:
@@ -10,46 +10,68 @@ class RAGSampleInput:
     retrieved_docs: List[str]
 
 class AnswerGenerator:
-    def __init__(self, model_name: str = "google/flan-t5-base"):
-        # Using flan-t5-base on CPU. First run downloads the model.
+    def __init__(
+        self,
+        model_name: str = "google/flan-t5-large",
+        max_new_tokens: int = 256,
+        device: int = -1,  # -1 = CPU, >=0 = CUDA device index
+    ):
         self.model_name = model_name
-        # initialize pipeline
-        self.generator = pipeline(
-            "text2text-generation",
-            model=self.model_name,
-            device=-1,  # CPU
-            truncation=True
-        )
+        self.max_new_tokens = max_new_tokens
+
+        if device >= 0 and torch.cuda.is_available():
+            self.device = torch.device(f"cuda:{device}")
+        else:
+            self.device = torch.device("cpu")
+
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name).to(self.device)
+        self.model.eval()
+
+        # model max length (LED supports long contexts)
+        self.max_input_len = getattr(self.tokenizer, "model_max_length", 16384)
 
     def build_prompt(self, sample: RAGSampleInput) -> str:
-        # Label each retrieved chunk to make it clear for the model
         ctx = []
-        for i, doc in enumerate(sample.retrieved_docs[:5]):  # use up to 5 chunks
-            ctx.append(f"[DOC {i+1}]: {doc}")
-
+        for i, doc in enumerate(sample.retrieved_docs):
+            ctx.append(f"[DOC {i+1}]\n{doc.strip()}")
         context_text = "\n\n".join(ctx)
-        prompt = (
-            f"You are given the following context documents. Use them to answer the question concisely "
-            f"and in a complete sentence. If the context is insufficient, say 'Not enough information.'\n\n"
+
+        return (
+            "You are a precise QA system.\n"
+            "Answer using ONLY the provided context.\n"
+            "Answer in ONE short sentence (max 20 words).\n"
+            "Do NOT add extra background. Do NOT quote the context.\n\n"
             f"Context:\n{context_text}\n\n"
-            f"Question: {sample.query}\n\nAnswer:"
+            f"Question: {sample.query}\n"
+            "Answer:"
         )
-        return prompt
+
 
     def generate_answer(self, sample: RAGSampleInput) -> str:
         prompt = self.build_prompt(sample)
 
-        out = self.generator(
+        inputs = self.tokenizer(
             prompt,
-            max_length=128,
-            do_sample=False,   # deterministic
-            num_return_sequences=1
-        )
-        text = out[0]["generated_text"].strip()
+            return_tensors="pt",
+            truncation=True,
+            max_length=self.max_input_len - self.max_new_tokens,
+        ).to(self.device)
 
-        # fallback: if model output is too short, return concatenated top-k chunks
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=self.max_new_tokens,
+                do_sample=False,
+            )
+
+        text = self.tokenizer.decode(
+            outputs[0],
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=True,
+        ).strip()
+
         if len(text.split()) < 3:
-            fallback = " ".join(sample.retrieved_docs[:3])
-            return fallback[:1000].strip()
+            return " ".join(sample.retrieved_docs[:2])[:2000]
 
         return text
