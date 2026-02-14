@@ -1,6 +1,6 @@
 # RAG Optimizer Tool 🧠📚
 
-A production-style Retrieval-Augmented Generation (RAG) experimentation platform with:
+A production style light weight Retrieval-Augmented Generation (RAG) experimentation platform with:
 
 - 🔎 Live RAG API (FastAPI)
 - 📊 Optimization dashboard (Streamlit)
@@ -35,10 +35,10 @@ This installs:
 
 ---
 
-# Running the Application
+# 🚀 Running the Application
 
-You need to run two processes:\
-1. The FastAPI backend\
+You need to run two processes:
+1. The FastAPI backend
 2. The Streamlit dashboard
 
 ## 1. Prepare the dataset
@@ -64,3 +64,127 @@ You can try out your own corpus by modifying `prepare_wikipedia_corpus.py` scrip
 
 ## 2. Start the FastAPI Backend
 
+From the project root, run:
+```
+python -m uvicorn api.main:app --reload --port 9000
+```
+
+If successful, you'll see:
+```
+Uvicorn running on http://127.0.0.1:9000
+```
+
+### Useful API URLs:
+
+Swagger UI:
+```
+http://127.0.0.1:9000/docs
+```
+
+Health Check:
+```
+http://127.0.0.1:9000/health
+```
+
+## 3. Start the Dashboard (Streamlit)
+
+Open a second terminal (same environment active):
+```
+streamlit run ui/app.py
+```
+
+Streamlit will show a local URL, typically:
+```
+http://localhost:8501
+```
+
+Open it in your browser
+
+# 🔎 Using the App
+
+## 💬 Live RAG
+
+- Ask questions against the current corpus
+- Inspect retrieved contexts
+- View reranker scores
+- Adjust `k` and reranker settings
+
+## 🔁 Change Corpus Without Restarting
+
+From the UI sidebar:
+
+- Set a new `docs_path`
+- Click **Reload corpus in API**
+- Live RAG immediately uses the new corpus
+
+## 🧪 Optimize RAG Configuration
+
+Use the Optimize tab to tune:
+
+- chunk_size
+- overlap
+- top-k
+- reranker (on/off)
+
+**Two-Stage Strategy**
+
+To avoid slow “full RAG for every config”, the optimizer uses:
+- Stage 1:
+    Retrieval-only ranking across many configs (fast)
+- Stage 2
+    Full RAG (generation + LLM judge) only on top configs (expensive)
+
+This makes large datasets practical on CPU and matches real-world evaluation workflows.
+
+Results are saved to:
+```
+experiments/run_YYYYMMDD_HHMMSS.json
+```
+
+## 🏆 Leaderboard
+
+The Leaderboard tab:
+
+- Lists all experiment runs
+- Shows best configs
+- Displays combined score:
+```
+combined = 0.7 * judge + 0.2 * f1 + 0.1 * recall
+```
+- Provides copy-ready configuration snippet for production
+
+# 🧠 Design Principles
+
+- Local-first corpus (no external DB required)
+- Modular retriever / reranker / generator
+- Instruction-tuned generator (Flan-T5)
+- Long-context optional
+- Two-stage optimization for scalability
+- UI controls the entire workflow
+
+# ⚠️ Troubleshooting
+
+### Numpy/Scipy Errors
+
+Use:
+```
+conda env create -f environment.yml
+```
+
+** Do not install NumPy 2.x manually **
+
+### Torch GPU
+
+The provided environment uses CPU-only PyTorch.
+If you want GPU support, modify: ` cpuonly` in `environment.yml` to a CUDA-compatible configuration.
+
+### `ModuleNotFoundError: autoreg`
+
+Run Streamlit from project root OR ensure `ui/app.py` adds repo root to `sys.path`
+
+# Updates I am currently working on:
+
+- Background optimization jobs (non-blocking UI)
+- Better charts + config drilldown
+- Docker Compose for one-command startup
+- Hosted deployment (HF Spaces + Render)
