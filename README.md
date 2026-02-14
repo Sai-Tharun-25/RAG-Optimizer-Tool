@@ -102,6 +102,8 @@ Open it in your browser
 
 # 🔎 Using the App
 
+![alt text](image.png)
+
 ## 💬 Live RAG
 
 - Ask questions against the current corpus
