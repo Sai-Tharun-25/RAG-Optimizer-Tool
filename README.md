@@ -164,21 +164,21 @@ combined = 0.7 * judge + 0.2 * f1 + 0.1 * recall
 
 # ⚠️ Troubleshooting
 
-### Numpy/Scipy Errors
+### 1. Numpy/Scipy Errors
 
 Use:
 ```
 conda env create -f environment.yml
 ```
 
-** Do not install NumPy 2.x manually **
+**Do not install NumPy 2.x manually**
 
-### Torch GPU
+### 2. Torch GPU
 
 The provided environment uses CPU-only PyTorch.
 If you want GPU support, modify: ` cpuonly` in `environment.yml` to a CUDA-compatible configuration.
 
-### `ModuleNotFoundError: autoreg`
+### 3. `ModuleNotFoundError: autoreg`
 
 Run Streamlit from project root OR ensure `ui/app.py` adds repo root to `sys.path`
 
