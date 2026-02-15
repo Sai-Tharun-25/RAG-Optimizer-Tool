@@ -1,4 +1,3 @@
-# autoreg/answering.py
 from typing import List
 from dataclasses import dataclass
 import torch
@@ -28,7 +27,7 @@ class AnswerGenerator:
         self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name).to(self.device)
         self.model.eval()
 
-        # model max length (LED supports long contexts)
+        # model max length 
         self.max_input_len = getattr(self.tokenizer, "model_max_length", 16384)
 
     def build_prompt(self, sample: RAGSampleInput) -> str:

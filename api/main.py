@@ -1,5 +1,3 @@
-# api/main.py
-
 from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -20,13 +18,9 @@ try:
 except Exception:
     CrossEncoderReranker = None
 
-
 app = FastAPI(title="RAG Optimizer API")
 
-
-# =====================================================
 # ===============  GLOBAL RAG STATE  ==================
-# =====================================================
 
 _docs: List[str] = []
 _chunk_texts: List[str] = []
@@ -77,20 +71,14 @@ def build_index_from_docs(docs_path: Path):
 
     print(f"[API] Index built. Docs: {len(_docs)} | Chunks: {len(_chunk_texts)}")
 
-
-# =====================================================
 # ================== STARTUP LOAD =====================
-# =====================================================
 
 @app.on_event("startup")
 def startup_init():
     default_path = Path("data/wiki_docs.jsonl")
     build_index_from_docs(default_path)
 
-
-# =====================================================
 # ================== HEALTH CHECK =====================
-# =====================================================
 
 @app.get("/health")
 def health():
@@ -101,10 +89,7 @@ def health():
         "chunks": len(_chunk_texts),
     }
 
-
-# =====================================================
 # ================== LIVE QUERY =======================
-# =====================================================
 
 @app.get("/query")
 def query_rag(
@@ -145,10 +130,7 @@ def query_rag(
         "reranker_scores": reranker_scores,
     }
 
-
-# =====================================================
 # ================== RELOAD CORPUS ====================
-# =====================================================
 
 class ReloadRequest(BaseModel):
     docs_path: str
@@ -169,10 +151,7 @@ def reload_corpus(req: ReloadRequest):
         "docs_path": str(docs_path),
     }
 
-
-# =====================================================
 # ================== EXPERIMENTS ======================
-# =====================================================
 
 class SearchSpace(BaseModel):
     chunk_size: List[int]

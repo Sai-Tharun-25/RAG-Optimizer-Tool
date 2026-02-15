@@ -1,4 +1,3 @@
-# autoreg/metrics.py
 from typing import List, Set
 
 def recall_at_k(retrieved_doc_ids: List[int], relevant_doc_ids: Set[int]) -> float:
@@ -19,7 +18,6 @@ def mrr_at_k(retrieved_doc_ids: List[int], relevant_doc_ids: Set[int]) -> float:
     return 0.0
 
 def f1_token_overlap(pred: str, gold: str) -> float:
-    # keep your existing implementation here
     pred_tokens = pred.lower().split()
     gold_tokens = gold.lower().split()
     if not pred_tokens or not gold_tokens:

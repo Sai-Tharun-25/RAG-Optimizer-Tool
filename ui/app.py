@@ -1,4 +1,3 @@
-# ui/app.py
 import json
 import time
 import sys
@@ -12,13 +11,10 @@ if str(ROOT_DIR) not in sys.path:
 
 import pandas as pd
 import streamlit as st
-
-# Optional plotting (matplotlib only; no seaborn)
 import matplotlib.pyplot as plt
 
-# --- If you want UI to trigger optimizer in-process ---
 from autoreg.data import load_qa_dataset, load_docs_corpus
-from autoreg.optimizer import two_stage_search  # your two-stage function
+from autoreg.optimizer import two_stage_search  
 
 
 EXPERIMENTS_DIR = Path("experiments")
@@ -345,8 +341,6 @@ with tab_lb:
             st.markdown("### Best config")
             best = df.iloc[0].to_dict()
             st.json(best)
-
-            # Optional: show a “one-click apply” snippet for your API service
             st.markdown("### Apply to API (manual)")
             st.code(
                 f"# In api/rag_service.py set defaults:\n"

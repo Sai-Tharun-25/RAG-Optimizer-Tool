@@ -1,4 +1,3 @@
-# scripts/prepare_wikipedia_corpus.py
 from datasets import load_dataset
 import json
 from pathlib import Path
@@ -45,7 +44,7 @@ def prepare_eval():
     print("Loading Wikipedia QA pairs (evaluation set)...")
     qa = load_dataset("rag-datasets/rag-mini-wikipedia", "question-answer")
 
-    split_name = list(qa.keys())[0]   # usually 'train'
+    split_name = list(qa.keys())[0]  
     dataset = qa[split_name]
 
     written = 0

@@ -26,7 +26,7 @@ class SimpleEmbeddingModel:
             texts,
             convert_to_numpy=True,
             show_progress_bar=False,
-            normalize_embeddings=True,  # unit vectors
+            normalize_embeddings=True, 
         )
         return embeddings.astype("float32")
 

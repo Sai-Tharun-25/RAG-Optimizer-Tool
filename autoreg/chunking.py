@@ -1,4 +1,3 @@
-# autoreg/chunking.py
 from typing import List, Tuple
 
 def simple_chunk(text: str, chunk_size: int = 512, overlap: int = 64) -> List[str]:
@@ -11,7 +10,6 @@ def simple_chunk(text: str, chunk_size: int = 512, overlap: int = 64) -> List[st
     if not words:
         return []
 
-    # Ensure we don't get stuck or go backwards
     if overlap >= chunk_size:
         # effectively no overlap or minimal
         overlap = chunk_size - 1 if chunk_size > 1 else 0

@@ -6,21 +6,18 @@ from autoreg.chunking import build_chunk_corpus
 from autoreg.retriever import SimpleEmbeddingModel, VectorRetriever
 from autoreg.answering import AnswerGenerator, RAGSampleInput
 
-# Choose one config to inspect
 INSPECT_CONFIG = RAGConfig(chunk_size=256, overlap=32, k=3)
 
 def debug_run(dataset_path="data/sample.jsonl", docs_path="data/docs.jsonl"):
     dataset = load_qa_dataset(dataset_path)
     docs = load_docs_corpus(docs_path)
 
-    # Build chunk corpus (what the experiment will use)
     chunk_texts, chunk_doc_ids = build_chunk_corpus(
         docs, chunk_size=INSPECT_CONFIG.chunk_size, overlap=INSPECT_CONFIG.overlap
     )
 
     print(f"TOTAL DOCS: {len(docs)}; TOTAL CHUNKS: {len(chunk_texts)}")
 
-    # Build retriever once
     embed_model = SimpleEmbeddingModel()
     retriever = VectorRetriever(chunk_texts, embed_model)
 
@@ -33,7 +30,6 @@ def debug_run(dataset_path="data/sample.jsonl", docs_path="data/docs.jsonl"):
         retrieved_chunk_texts = [chunk_texts[idx] for idx in retrieved_chunk_indices]
         retrieved_doc_ids = [chunk_doc_ids[idx] for idx in retrieved_chunk_indices]
 
-        # Generate answer using same method your pipeline uses
         sample = RAGSampleInput(query=ex.query, retrieved_docs=retrieved_chunk_texts)
         pred = answer_gen.generate_answer(sample)
 
@@ -60,7 +56,6 @@ def debug_run(dataset_path="data/sample.jsonl", docs_path="data/docs.jsonl"):
             "predicted": pred
         })
 
-    # Save outputs to JSONL for inspection
     out_path = Path("experiments/debug_one_config.jsonl")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:

@@ -65,20 +65,20 @@ def run_rag_experiment(
     judge_scores = []
 
     for ex in dataset:
-        # 1) Retrieve top-N candidate chunk indices (N = config.top_n)
+        # Retrieve top-N candidate chunk indices (N = config.top_n)
         top_n = max(config.top_n, config.k)
         retrieved_topn = retriever.retrieve(ex.query, k=top_n)
         retrieved_topn_indices = [idx for idx, _ in retrieved_topn]
         retrieved_topn_texts = [chunk_texts[idx] for idx in retrieved_topn_indices]
 
-        # 2) If reranker enabled, rerank these candidate texts & select top-k
+        # If reranker enabled, rerank these candidate texts & select top-k
         if reranker is not None and retrieved_topn_texts:
             ranked = reranker.rerank(ex.query, retrieved_topn_texts)
             # ranked: list of (index_in_candidate_texts, score) sorted desc
             topk_indices_in_candidates = [i for i, _ in ranked[: config.k]]
             # map back to chunk_texts indices
             retrieved_chunk_indices = [retrieved_topn_indices[i] for i in topk_indices_in_candidates]
-            # optional: keep reranker scores if you want to surface them
+            # keep reranker scores if you want to surface them
         else:
             # no reranker: just take top-k from bi-encoder retrieval
             retrieved_chunk_indices = retrieved_topn_indices[: config.k]
@@ -87,7 +87,7 @@ def run_rag_experiment(
         retrieved_chunk_texts = [chunk_texts[idx] for idx in retrieved_chunk_indices]
         retrieved_doc_ids = {chunk_doc_ids[idx] for idx in retrieved_chunk_indices}
 
-        # Retrieval metric (Recall@k)
+        # Retrieval metric 
         relevant_indices = set(ex.relevant_doc_ids or [])
         recall_val = recall_at_k(list(retrieved_doc_ids), relevant_indices)
         recalls.append(recall_val)
@@ -141,7 +141,7 @@ def run_retrieval_only_experiment(
     embed_model = SimpleEmbeddingModel()
     retriever = VectorRetriever(chunk_texts, embed_model)
 
-    # optional reranker for stage-1 too (still faster than generation/judge)
+    # optional reranker for stage-1 too 
     reranker = CrossEncoderReranker() if getattr(config, "use_reranker", False) else None
 
     recalls = []
